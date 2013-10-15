@@ -130,3 +130,25 @@ Direction string_to_direction(const char *token) {
   }
   return INVALID_DIRECTION;
 }
+
+// Find first occurrence of target symbol, return true if found and set coordinates r  
+bool get_symbol_position(char **map, int height, int width, char target, int &r, int &c)
+{
+	// for now just put in dummy results
+	r = c = -1;
+	return false;
+}
+
+// Return symbol representing given station or line
+char get_symbol_for_station_or_line(const char *name)
+{
+	// dummy for now
+	return ' ';
+}
+
+// Check whether given route from start to destination is valid and return number of changes required
+int validate_route(char **map, int height, int width, const char *start_station, char *route, const char *destination)
+{
+	// dummy for now
+	return 1;
+}
