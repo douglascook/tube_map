@@ -134,8 +134,18 @@ Direction string_to_direction(const char *token) {
 // Find first occurrence of target symbol, return true if found and set coordinates r  
 bool get_symbol_position(char **map, int height, int width, char target, int &r, int &c)
 {
-	// for now just put in dummy results
-	r = c = -1;
+	for (int i = 0; i < height; i++)
+	{
+		for (int j = 0; j < width; j++)
+		{
+			if (map[i][j] == target)
+			{
+				r = i;
+				c = j;
+				return true;
+			}
+		}
+	}
 	return false;
 }
 
