@@ -27,5 +27,11 @@ bool get_symbol_position(char **map, int height, int width, char target, int &r,
 // Return symbol representing given station or line
 char get_symbol_for_station_or_line(const char *name);
 
+// search file for given string and return corresponding symbol
+bool search_file(const char *file, const char *name, char &symbol);
+
+// Helper function to shift all characters in array to the left
+void shift_left(char a[]);
+
 // Check whether given route from start to destination is valid and return number of changes required
 int validate_route(char ** map, int height, int width, const char *start_station, char *route, const char *destination);

@@ -152,8 +152,53 @@ bool get_symbol_position(char **map, int height, int width, char target, int &r,
 // Return symbol representing given station or line
 char get_symbol_for_station_or_line(const char *name)
 {
-	// dummy for now
-	return ' ';
+	char return_symbol = ' ';
+	if (search_file("lines.txt", name, return_symbol))
+	{
+		return return_symbol;
+	}
+	else if (search_file("stations.txt", name, return_symbol))
+	{
+		return return_symbol;
+	}
+	// this returns ' ' as the default
+	return return_symbol;
+}
+
+// Search file for given string and return corresponding symbol
+bool search_file(const char *file, const char *name, char &symbol)
+{	
+	ifstream i_stream;
+	char line[100];
+
+	i_stream.open(file);
+
+	while (!i_stream.eof())
+	{
+		i_stream.getline(line,100);
+		symbol = line[0];
+		
+		// function to shift everything left by 2 here so we can use strcmp
+		shift_left(line);
+		
+		if (!strcmp(line, name))
+		{
+			i_stream.close();
+			return true;
+		}
+	}
+		
+	i_stream.close();
+	return false;
+}
+
+// shift all elements of an array to the left by 2
+void shift_left(char a[])
+{
+	for (int i = 0; a[i]; i++)
+	{
+		a[i] = a[i+2];
+	}
 }
 
 // Check whether given route from start to destination is valid and return number of changes required
