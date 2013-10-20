@@ -33,11 +33,8 @@ bool find_symbol_matching_name(const char *file, const char *name, char &symbol)
 // Search station list for matching and return corresponding name
 bool find_station_matching_symbol(const char *symbol, char *station);
 
-// Helper function to shift all characters in array to the left
-void shift_left(char a[], int shift);
-
 // Translate direction into coordinate change 
 void coord_change(Direction direction, int& x_change, int& y_change);
 
 // Check whether given route from start to destination is valid and return number of changes required
-int validate_route(char ** map, int height, int width, const char *start_station, char *route, char *destination);
+int validate_route(char ** map, int height, int width, const char *start_station,  const char *route, char *destination);

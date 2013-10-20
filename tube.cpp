@@ -176,8 +176,9 @@ bool find_symbol_matching_name(const char *file, const char *name, char &symbol)
 		i_stream.getline(line,100);
 		symbol = line[0];
 		// shift everything left by 2 here so we can use strcmp
-		shift_left(line, 2);
-		
+		for (int i = 0; line[i]; i++)
+			line[i] = line[i+2];
+
 		if (!strcmp(line, name)){
 			i_stream.close();
 			return true;
@@ -200,25 +201,14 @@ bool find_station_matching_symbol(char symbol, char *station)
 		i_stream.getline(line,100);
 		if (line[0] == symbol)
 		{
-			shift_left(line, 2);
+			// delete first two symbols to return station name on its own
+			for (int i = 0; line[i]; i++)
+				line[i] = line[i+2];
 			strcpy(station, line);
-			cout << station[0] << station[1] << station[2];
 			return true;
 		}
 	}
-	
 	return false;
-}
-
-// shift all elements of an array to the left by 2
-void shift_left(char a[], int shift)
-{
-	// does this screw things up if we go out of bounds ie shift a 4 element array by 5???
-	
-	for (int i = 0; a[i]; i++)
-	{
-		a[i] = a[i + shift];
-	}
 }
 
 // translate direction into coordinate change
@@ -257,7 +247,7 @@ void coord_change(Direction direction, int& row_change, int& column_change)
 }
 
 // Check whether given route from start to destination is valid and return number of changes required
-int validate_route(char **map, int height, int width, const char *start_station, char *route, char *destination)
+int validate_route(char **map, int height, int width, const char *start_station, const char *route, char *destination)
 {
 	char prev_symbol, current_line, current_symbol = get_symbol_for_station_or_line(start_station);	
 	int row, column, prev_row, prev_column, row_change, column_change, changes = -1;
@@ -269,32 +259,27 @@ int validate_route(char **map, int height, int width, const char *start_station,
 	// otherwise return not a valid station error
 		return -1; 
 
-
-	// MAY WANT TO CREATE FUNCTION TO DO ALL OF THIS 
-	while (route[0] != '\0') 
+	int direction_length, position = 0;
+	while (route[position] != '\0')
 	{
 		char direction[] = {'\0','\0','\0'};
-		/*  below doesn't work for some reason
-		char *direction = new char[2];
-		direction[2] = '\0';
+		direction_length = 0;
 
-		delete [] direction; */
-		
-
-		// want to start count at one so the comma is stripped off too
-		int count = 1;
-		for (int i = 0; route[i]!=',' && route[i]!='\0'; i++)
-		{
-			direction[i] = route[i];
-			count++;
+		// strip out next direction from the route
+		for (int i = 0; (route[i + position] != ',') && (route[i + position] != '\0'); i++){
+			direction[i] = route[i + position];
+			direction_length++;
 		}
-		// this takes off the direction from the array so next direction is ready
-		if (route[0]!='\0')
-			shift_left(route, count);
-		
-		// this should set row and column change variables
+		position += direction_length;
+
+		// add one to skip comma and start at begininning of next direction
+		// if its not a comma then we are at EOF but need to complete final loop so just let it run
+		if (route[position] == ',')
+			position++;
+
+		// set row and column change variables
 		coord_change(string_to_direction(direction), column_change, row_change);
-		// 2 used as sentinel value to indicate invalid direction
+		//  check for invalid direction, using 2 as sentinel value to do this
 		if (column_change == 2)
 			return -5;
 			
@@ -313,15 +298,15 @@ int validate_route(char **map, int height, int width, const char *start_station,
 		
 		prev_symbol = current_symbol;
 
-		// check for off track
-		if (current_symbol == ' ')
-			return -6;
-
 		// check for out of bounds
 		if (row < 0 || row > 29 || column < 0 || column > 76)
 			return -7;
 
 		current_symbol = map[row][column];
+		
+		// check for off track
+		if (current_symbol == ' ')
+			return -6;
 
 		// check line and count if changed
 		if (!isalnum(current_symbol))
