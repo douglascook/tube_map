@@ -115,7 +115,7 @@ int main() {
 	
 // own tests
   strcpy(route, "N,N,N,N,N,N,E,E,E,E,E,E,E,E,E,E,E,E,E,E,NE,N,N,N,N,N,N,N,N,NW,W,W,W,W,W,W,W");
-  cout << "Starting at Marylebone and taking the steps:" << endl;
+  cout << "Starting at London Bridge and taking the steps:" << endl;
   cout << route << endl;
   result = validate_route(map, height, width, "London Bridge", route, destination);
   if (result >= 0)
@@ -125,7 +125,7 @@ int main() {
   cout << endl;
 
   strcpy(route, "E,E,E,E,NE,E,E,NE,E,E,NE,E,E,NE");
-  cout << "Starting at Marylebone and taking the steps:" << endl;
+  cout << "Starting at Southwark and taking the steps:" << endl;
   cout << route << endl;
   result = validate_route(map, height, width, "Southwark", route, destination);
   if (result >= 0)
@@ -135,7 +135,7 @@ int main() {
   cout << endl;
  
   strcpy(route, "E,E,E,E");
-  cout << "Starting at Marylebone and taking the steps:" << endl;
+  cout << "Starting at Sloane Square and taking the steps:" << endl;
   cout << route << endl;
   result = validate_route(map, height, width, "Sloane Square", route, destination);
   if (result >= 0)

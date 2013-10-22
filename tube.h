@@ -21,20 +21,11 @@ const char *error_description(int code);
 /* presupplied helper function for converting string to Direction enum */
 Direction string_to_direction(const char *token);
 
-// Find first occurrence of target symbol, return true if found and set coordinates r  
-bool get_symbol_position(char **map, int height, int width, char target, int &r, int &c);
+// Find first occurrence of target symbol, return true if found and set coordinates r and c
+bool get_symbol_position(char **map, int height, int width, char target, int& r, int& c);
 
 // Return symbol representing given station or line
 char get_symbol_for_station_or_line(const char *name);
 
-// search file for given string and return corresponding symbol
-bool find_symbol_matching_name(const char *file, const char *name, char &symbol);
-
-// Search station list for matching and return corresponding name
-bool find_station_matching_symbol(const char *symbol, char *station);
-
-// Translate direction into coordinate change 
-void coord_change(Direction direction, int& x_change, int& y_change);
-
 // Check whether given route from start to destination is valid and return number of changes required
-int validate_route(char ** map, int height, int width, const char *start_station,  const char *route, char *destination);
+int validate_route(char **map, int height, int width, const char *start_station,  const char *route, char *destination);

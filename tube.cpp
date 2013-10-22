@@ -131,60 +131,33 @@ Direction string_to_direction(const char *token) {
   return INVALID_DIRECTION;
 }
 
-// Find first occurrence of target symbol, return true if found and set coordinates r  
-bool get_symbol_position(char **map, int height, int width, char target, int &r, int &c)
+// Strip first two characters from line of text to leave name of the station
+void get_station_name(char *line)
 {
-	for (int i = 0; i < height; i++)
-	{
-		for (int j = 0; j < width; j++)
-		{
-			if (map[i][j] == target){
-				r = i;
-				c = j;
-				return true;
-			}
-		}
+	for (int i = 0; line[i]; i++){
+		line[i] = line[i+2];
 	}
-	return false;
 }
-
-// Return symbol representing given station or line
-char get_symbol_for_station_or_line(const char *name)
-{
-	char return_symbol = ' ';
-	if (find_symbol_matching_name("stations.txt", name, return_symbol)){
-		return return_symbol;
-	}
-	else if (find_symbol_matching_name("lines.txt", name, return_symbol)){
-		return return_symbol;
-	}
-	// this returns ' ' as the default if there is no match
-	return return_symbol;
-}
-
+	
 // Search file for given string and return corresponding symbol
 bool find_symbol_matching_name(const char *file, const char *name, char &symbol)
 {	
 	ifstream i_stream;
-	// 100 characters are sufficient for any line in the text files
+	// 100 characters is sufficient for any line in the text files
 	char line[100];
 
 	i_stream.open(file);
 
-	while (!i_stream.eof())
-	{
+	while (!i_stream.eof()){
 		i_stream.getline(line,100);
 		symbol = line[0];
-		// shift everything left by 2 here so we can use strcmp
-		for (int i = 0; line[i]; i++)
-			line[i] = line[i+2];
+		get_station_name(line);	
 
 		if (!strcmp(line, name)){
 			i_stream.close();
 			return true;
 		}
 	}
-		
 	i_stream.close();
 	return false;
 }
@@ -196,14 +169,11 @@ bool find_station_matching_symbol(char symbol, char *station)
 	char line[100];
 	i_stream.open("stations.txt");
 	
-	while (!i_stream.eof())
-	{
+	while (!i_stream.eof()){
 		i_stream.getline(line,100);
-		if (line[0] == symbol)
-		{
-			// delete first two symbols to return station name on its own
-			for (int i = 0; line[i]; i++)
-				line[i] = line[i+2];
+
+		if (line[0] == symbol){
+			get_station_name(line);
 			strcpy(station, line);
 			return true;
 		}
@@ -211,11 +181,10 @@ bool find_station_matching_symbol(char symbol, char *station)
 	return false;
 }
 
-// translate direction into coordinate change
+// Translate direction into coordinate change
 void coord_change(Direction direction, int& row_change, int& column_change)
 {
-	switch (direction)
-	{
+	switch (direction){
 		case N: row_change = 0; 
 			column_change = -1;
 			break;
@@ -246,86 +215,129 @@ void coord_change(Direction direction, int& row_change, int& column_change)
 	}
 }
 
+// Return next direction after given position in route string
+Direction get_next_direction(const char *route, int& position)
+{
+	char direction_string[] = {'\0','\0','\0'};
+	int direction_length = 0;
+	
+	// strip out next direction from the route
+	for (int i = 0; (route[position + i] != ',') && (route[position + i] != '\0'); i++){
+		direction_string[i] = route[position + i];
+		direction_length++;
+	}
+	position += direction_length;
+
+	// want to skip over commas to start at next direction unless we are at end of the route
+	if (route[position] == ','){
+		position++;
+	}
+	return string_to_direction(direction_string);
+}
+
+// Question 1
+// Find first occurrence of target symbol, return true if found and set coordinates r and c
+bool get_symbol_position(char **map, int height, int width, char target, int& r, int& c)
+{
+	for (int i = 0; i < height; i++){
+		for (int j = 0; j < width; j++)		{
+			if (map[i][j] == target){
+				r = i;
+				c = j;
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+// Question 2
+// Return symbol representing given station or line
+char get_symbol_for_station_or_line(const char *name)
+{
+	char return_symbol = ' ';
+	if (find_symbol_matching_name("stations.txt", name, return_symbol)){
+		return return_symbol;
+	}
+	else if (find_symbol_matching_name("lines.txt", name, return_symbol)){
+		return return_symbol;
+	}
+	// return ' ' as the default if there is no match
+	return return_symbol;
+}
+
+//Question 3
 // Check whether given route from start to destination is valid and return number of changes required
 int validate_route(char **map, int height, int width, const char *start_station, const char *route, char *destination)
 {
 	char prev_symbol, current_line, current_symbol = get_symbol_for_station_or_line(start_station);	
-	int row, column, prev_row, prev_column, row_change, column_change, changes = -1;
+	int row, column, prev_row, prev_column, row_change, column_change, changes = -1, position = 0;
+	Direction direction;
 
-	// if the symbol is alphanumeric then it is a station so return its coords
-	if (isalnum(current_symbol))
+	// if the symbol is alphanumeric then it is a station so find corresponding station and set coords 
+	if (isalnum(current_symbol)){
 		get_symbol_position(map, height, width, current_symbol, row, column);
-	else
+	}else{
 	// otherwise return not a valid station error
 		return -1; 
+	}
 
-	int direction_length, position = 0;
-	while (route[position] != '\0')
-	{
-		char direction[] = {'\0','\0','\0'};
-		direction_length = 0;
+	while (route[position] != '\0'){
+		// strip out next direction for processing
+		direction = get_next_direction(route, position);
 
-		// strip out next direction from the route
-		for (int i = 0; (route[i + position] != ',') && (route[i + position] != '\0'); i++){
-			direction[i] = route[i + position];
-			direction_length++;
-		}
-		position += direction_length;
+		// set row and column change variables so we can update the map position
+		coord_change(direction, column_change, row_change);
 
-		// add one to skip comma and start at begininning of next direction
-		// if its not a comma then we are at EOF but need to complete final loop so just let it run
-		if (route[position] == ',')
-			position++;
-
-		// set row and column change variables
-		coord_change(string_to_direction(direction), column_change, row_change);
-		//  check for invalid direction, using 2 as sentinel value to do this
-		if (column_change == 2)
+		//  check for invalid direction, using 2 as sentinel value for this
+		if (column_change == 2){
 			return -5;
-			
+		}
+		
 		// check for back tracking
 		// at this point 'previous' variables are still holding data about the point before last
-		// so we can compare the next point with point before last to see if it matches
-		if ((row + row_change == prev_row) && (column + column_change == prev_column) && (prev_symbol == map[row + row_change][column + column_change]))
+		// so compare the next point with point before last to see if it matches
+		if ((row + row_change == prev_row) && (column + column_change == prev_column)){
 			return -4;
+		}
 			
 		// now update the current coords
 		prev_row = row;
 		prev_column = column;
-		
 		row += row_change;
 		column += column_change;
 		
-		prev_symbol = current_symbol;
-
 		// check for out of bounds
-		if (row < 0 || row > 29 || column < 0 || column > 76)
+		if (row < 0 || row > 29 || column < 0 || column > 76){
 			return -7;
+		}
 
+		prev_symbol = current_symbol;
 		current_symbol = map[row][column];
-		
+
 		// check for off track
-		if (current_symbol == ' ')
+		if (current_symbol == ' '){
 			return -6;
-
-		// check line and count if changed
-		if (!isalnum(current_symbol))
-		{
-			// started changes at -1 so first line doesn't count as a change
-			if (current_symbol != current_line)
-				changes++;
-
-			current_line = current_symbol;
 		}
 
 		// check for line hopping between stations
 		// if neither previous nor current point is station and they are on different lines
-		if (!isalnum(prev_symbol) && !isalnum(current_symbol) && (current_symbol != prev_symbol))
+		if (!isalnum(prev_symbol) && !isalnum(current_symbol) && (current_symbol != prev_symbol)){
 			return -3;
+		}
+
+		// check if we have changed line and increment count if needed 
+		// started changes at -1 so starting line doesn't count as a change
+		if (!isalnum(current_symbol) && current_symbol != current_line){
+			current_line = current_symbol;
+			changes++;
+		}
 	}	
-	// check if final point is station
-	if (!find_station_matching_symbol(current_symbol, destination))
+
+	// check that final point is a station
+	if (!find_station_matching_symbol(current_symbol, destination)){
 		return -2;
+	}
 
 	return changes;
 }
