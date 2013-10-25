@@ -80,6 +80,7 @@ int main() {
     cout << "is an invalid route (" << error_description(result) << ")" << endl;
   cout << endl;
 
+
   /* invalid route because of line hopping between stations */ 
   strcpy(route, "N,N,N,N,N,NE,W");
   cout << "Starting at London Bridge and taking the steps:" << endl;
@@ -143,6 +144,47 @@ int main() {
   else 
     cout << "is an invalid route (" << error_description(result) << ")" << endl;
   cout << endl;
+ 
+  strcpy(route, "E,E,E,E,E,S,S,SW,S,S,S,S,S,S,SW,W,W,W,W,W,W,N,N,N");
+  cout << "Starting at Euston and taking the steps:" << endl;
+  cout << route << endl;
+  result = validate_route(map, height, width, "Euston/Euston Square", route, destination);
+  if (result >= 0)
+    cout << "is a valid route with " << result << " line change(s) ending at " << destination << "." << endl;
+  else 
+    cout << "is an invalid route (" << error_description(result) << ")" << endl;
+  cout << endl;
+
+  strcpy(route, "");
+  cout << "Starting at Euston and taking the steps:" << endl;
+  cout << route << endl;
+  result = validate_route(map, height, width, "Euston/Euston Square", route, destination);
+  if (result >= 0)
+    cout << "is a valid route with " << result << " line change(s) ending at " << destination << "." << endl;
+  else 
+    cout << "is an invalid route (" << error_description(result) << ")" << endl;
+  cout << endl;
+
+  strcpy(route, ",,");
+  cout << "Starting at Euston and taking the steps:" << endl;
+  cout << route << endl;
+  result = validate_route(map, height, width, "Euston/Euston Square", route, destination);
+  if (result >= 0)
+    cout << "is a valid route with " << result << " line change(s) ending at " << destination << "." << endl;
+  else 
+    cout << "is an invalid route (" << error_description(result) << ")" << endl;
+  cout << endl;
+
+  strcpy(route, "E,E,E,E,E,W,W,W,W,W");
+  cout << "Starting at St James Park and taking the steps:" << endl;
+  cout << route << endl;
+  result = validate_route(map, height, width, "St James Park", route, destination);
+  if (result >= 0)
+    cout << "is a valid route with " << result << " line change(s) ending at " << destination << "." << endl;
+  else 
+    cout << "is an invalid route (" << error_description(result) << ")" << endl;
+  cout << endl;
+
 
  return 0;
 }

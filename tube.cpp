@@ -181,10 +181,39 @@ bool find_station_matching_symbol(char symbol, char *station)
 	return false;
 }
 
+// create array based on route string and return the number of directions involved
+int create_direction_array(const char *route, Direction direction_array[])
+{
+	int index = 0, position = 0, direction_count = 0; 
+
+	while (route[position] != '\0'){
+		char direction_string[] = {'\0','\0','\0'};
+		int direction_length = 0;
+		
+		// strip out next direction from the route
+		for (int i = 0; (route[position + i] != ',') && (route[position + i] != '\0'); i++){
+			direction_string[i] = route[position + i];
+			direction_length++;
+		}
+		position += direction_length;
+
+		// want to skip over commas to start at next direction unless we are at end of the route
+		if (route[position] == ','){
+			position++;
+		}
+
+		direction_array[index] = string_to_direction(direction_string);
+		direction_count++;
+		index++;
+	}
+	return direction_count;
+}
+
 // Translate direction into coordinate change
 void coord_change(Direction direction, int& row_change, int& column_change)
 {
 	switch (direction){
+		cout << "direction: " << direction << endl;
 		case N: row_change = 0; 
 			column_change = -1;
 			break;
@@ -210,29 +239,9 @@ void coord_change(Direction direction, int& row_change, int& column_change)
 			 column_change = 1;
 			break;
 		case INVALID_DIRECTION:
-			// using 2 as sentinel value so we can display error message
-			row_change = 2;
+			// already tested for invalid directions so will not reach here 
+				;	
 	}
-}
-
-// Return next direction after given position in route string
-Direction get_next_direction(const char *route, int& position)
-{
-	char direction_string[] = {'\0','\0','\0'};
-	int direction_length = 0;
-	
-	// strip out next direction from the route
-	for (int i = 0; (route[position + i] != ',') && (route[position + i] != '\0'); i++){
-		direction_string[i] = route[position + i];
-		direction_length++;
-	}
-	position += direction_length;
-
-	// want to skip over commas to start at next direction unless we are at end of the route
-	if (route[position] == ','){
-		position++;
-	}
-	return string_to_direction(direction_string);
 }
 
 // Question 1
@@ -240,7 +249,7 @@ Direction get_next_direction(const char *route, int& position)
 bool get_symbol_position(char **map, int height, int width, char target, int& r, int& c)
 {
 	for (int i = 0; i < height; i++){
-		for (int j = 0; j < width; j++)		{
+		for (int j = 0; j < width; j++){
 			if (map[i][j] == target){
 				r = i;
 				c = j;
@@ -266,14 +275,14 @@ char get_symbol_for_station_or_line(const char *name)
 	return return_symbol;
 }
 
-//Question 3
+// Question 3
 // Check whether given route from start to destination is valid and return number of changes required
 int validate_route(char **map, int height, int width, const char *start_station, const char *route, char *destination)
 {
 	char prev_symbol, current_line, current_symbol = get_symbol_for_station_or_line(start_station);	
-	int row, column, prev_row, prev_column, row_change, column_change, changes = -1, position = 0;
-	Direction direction;
-
+	int direction_count, row, column, prev_row, prev_column, row_change, column_change, changes = 0;
+	Direction direction, direction_array[100];
+ 
 	// if the symbol is alphanumeric then it is a station so find corresponding station and set coords 
 	if (isalnum(current_symbol)){
 		get_symbol_position(map, height, width, current_symbol, row, column);
@@ -282,22 +291,23 @@ int validate_route(char **map, int height, int width, const char *start_station,
 		return -1; 
 	}
 
-	while (route[position] != '\0'){
-		// strip out next direction for processing
-		direction = get_next_direction(route, position);
+	direction_count = create_direction_array(route, direction_array);
+	// check for any invalid directions (treating empty route string as a valid route that goes nowhere)
+	for (int i = 0; i < direction_count; i++){
+		if (direction_array[i] == 8)
+			return -5;
+	}	
+	
+	for (int i = 0; i < direction_count; i++){
+		direction = direction_array[i];
 
 		// set row and column change variables so we can update the map position
 		coord_change(direction, column_change, row_change);
 
-		//  check for invalid direction, using 2 as sentinel value for this
-		if (column_change == 2){
-			return -5;
-		}
-		
 		// check for back tracking
 		// at this point 'previous' variables are still holding data about the point before last
 		// so compare the next point with point before last to see if it matches
-		if ((row + row_change == prev_row) && (column + column_change == prev_column)){
+		if ((row + row_change == prev_row) && (column + column_change == prev_column) && (prev_symbol == current_symbol)){
 			return -4;
 		}
 			
@@ -330,7 +340,8 @@ int validate_route(char **map, int height, int width, const char *start_station,
 		// started changes at -1 so starting line doesn't count as a change
 		if (!isalnum(current_symbol) && current_symbol != current_line){
 			current_line = current_symbol;
-			changes++;
+			if (i != 0)
+				changes++;
 		}
 	}	
 
