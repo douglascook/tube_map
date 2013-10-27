@@ -185,6 +185,17 @@ int main() {
     cout << "is an invalid route (" << error_description(result) << ")" << endl;
   cout << endl;
 
+  strcpy(route, "S");
+  cout << "Starting at Aldgate and taking the steps:" << endl;
+  cout << route << endl;
+  result = validate_route(map, height, width, "Southwark", route, destination);
+  if (result >= 0)
+    cout << "is a valid route with " << result << " line change(s) ending at " << destination << "." << endl;
+  else 
+    cout << "is an invalid route (" << error_description(result) << ")" << endl;
+  cout << endl;
+
+
 
  return 0;
 }

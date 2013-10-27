@@ -134,27 +134,26 @@ Direction string_to_direction(const char *token) {
 // Strip first two characters from line of text to leave name of the station
 void get_station_name(char *line)
 {
-	for (int i = 0; line[i]; i++){
+	for (int i = 0; line[i] != '\0'; i++){
 		line[i] = line[i+2];
 	}
 }
 	
-// Search file for given string and return corresponding symbol
+// Search file for given string and return true if found 
 bool find_symbol_matching_name(const char *file, const char *name, char &symbol)
 {	
-	ifstream i_stream;
-	// 100 characters is sufficient for any line in the text files
-	char line[100];
-
-	i_stream.open(file);
+	char line[MAX_LINE_LENGTH];
+	ifstream i_stream(file);
+	assert(i_stream);
 
 	while (!i_stream.eof()){
-		i_stream.getline(line,100);
+		i_stream.getline(line,MAX_LINE_LENGTH);
 		symbol = line[0];
 		get_station_name(line);	
-
+		
 		if (!strcmp(line, name)){
 			i_stream.close();
+			// symbol at this point matches desired station or line
 			return true;
 		}
 	}
@@ -162,16 +161,16 @@ bool find_symbol_matching_name(const char *file, const char *name, char &symbol)
 	return false;
 }
 
-// Search station list for matching symbol and return corresponding name
+// Search station list for matching symbol and return true if found 
 bool find_station_matching_symbol(char symbol, char *station)
 {
-	ifstream i_stream;
-	char line[100];
-	i_stream.open("stations.txt");
+	char line[MAX_LINE_LENGTH];
+	ifstream i_stream("stations.txt");
+	assert(i_stream);
 	
 	while (!i_stream.eof()){
-		i_stream.getline(line,100);
-
+		i_stream.getline(line,MAX_LINE_LENGTH);
+		// if the correct symbol has been found then set the station name
 		if (line[0] == symbol){
 			get_station_name(line);
 			strcpy(station, line);
@@ -184,11 +183,11 @@ bool find_station_matching_symbol(char symbol, char *station)
 // create array based on route string and return the number of directions involved
 int create_direction_array(const char *route, Direction direction_array[])
 {
-	int index = 0, position = 0, direction_count = 0; 
+	int index = 0, position = 0, direction_count = 0, direction_length; 
 
 	while (route[position] != '\0'){
 		char direction_string[] = {'\0','\0','\0'};
-		int direction_length = 0;
+		direction_length = 0;
 		
 		// strip out next direction from the route
 		for (int i = 0; (route[position + i] != ',') && (route[position + i] != '\0'); i++){
@@ -197,7 +196,7 @@ int create_direction_array(const char *route, Direction direction_array[])
 		}
 		position += direction_length;
 
-		// want to skip over commas to start at next direction unless we are at end of the route
+		// want to skip over commas to start at next direction
 		if (route[position] == ','){
 			position++;
 		}
@@ -213,7 +212,6 @@ int create_direction_array(const char *route, Direction direction_array[])
 void coord_change(Direction direction, int& row_change, int& column_change)
 {
 	switch (direction){
-		cout << "direction: " << direction << endl;
 		case N: row_change = 0; 
 			column_change = -1;
 			break;
@@ -264,14 +262,13 @@ bool get_symbol_position(char **map, int height, int width, char target, int& r,
 // Return symbol representing given station or line
 char get_symbol_for_station_or_line(const char *name)
 {
-	char return_symbol = ' ';
-	if (find_symbol_matching_name("stations.txt", name, return_symbol)){
-		return return_symbol;
-	}
-	else if (find_symbol_matching_name("lines.txt", name, return_symbol)){
-		return return_symbol;
-	}
 	// return ' ' as the default if there is no match
+	char return_symbol = ' ';
+	
+	if (!(find_symbol_matching_name("stations.txt", name, return_symbol))){
+		// only need to check lines if not found in stations
+		find_symbol_matching_name("lines.txt", name, return_symbol);
+	}
 	return return_symbol;
 }
 
@@ -281,7 +278,7 @@ int validate_route(char **map, int height, int width, const char *start_station,
 {
 	char prev_symbol, current_line, current_symbol = get_symbol_for_station_or_line(start_station);	
 	int direction_count, row, column, prev_row, prev_column, row_change, column_change, changes = 0;
-	Direction direction, direction_array[100];
+	Direction direction, direction_array[512];
  
 	// if the symbol is alphanumeric then it is a station so find corresponding station and set coords 
 	if (isalnum(current_symbol)){
@@ -292,9 +289,10 @@ int validate_route(char **map, int height, int width, const char *start_station,
 	}
 
 	direction_count = create_direction_array(route, direction_array);
+
 	// check for any invalid directions (treating empty route string as a valid route that goes nowhere)
 	for (int i = 0; i < direction_count; i++){
-		if (direction_array[i] == 8)
+		if (direction_array[i] == INVALID_DIRECTION)
 			return -5;
 	}	
 	
@@ -318,7 +316,7 @@ int validate_route(char **map, int height, int width, const char *start_station,
 		column += column_change;
 		
 		// check for out of bounds
-		if (row < 0 || row > 29 || column < 0 || column > 76){
+		if (row < 0 || row > height-1 || column < 0 || column > width-1){
 			return -7;
 		}
 
@@ -337,9 +335,9 @@ int validate_route(char **map, int height, int width, const char *start_station,
 		}
 
 		// check if we have changed line and increment count if needed 
-		// started changes at -1 so starting line doesn't count as a change
 		if (!isalnum(current_symbol) && current_symbol != current_line){
 			current_line = current_symbol;
+			// don't want to count initial move as a line change
 			if (i != 0)
 				changes++;
 		}

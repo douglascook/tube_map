@@ -9,6 +9,9 @@ enum Direction {N, S, W, E, NE, NW, SE, SW, INVALID_DIRECTION};
 #define ERROR_OFF_TRACK -6
 #define ERROR_OUT_OF_BOUNDS -7
 
+// 100 characters is sufficient for any line in the text files
+const int MAX_LINE_LENGTH = 100;
+
 /* pre-supplied function to load a tube map from a file*/
 char **load_map(const char *filename, int &height, int &width);
 
